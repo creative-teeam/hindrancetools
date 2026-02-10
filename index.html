@@ -1,375 +1,171 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>坂道ツール</title>
-
-  <!-- 最低限CSP（外部JSなし・同一オリジンのみ） -->
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self';
-                 script-src 'self';
-                 style-src 'self';
-                 img-src 'self' data:;
-                 base-uri 'self';
-                 form-action 'self';
-                 frame-ancestors 'none';
-                 upgrade-insecure-requests">
-
-  <meta name="description" content="坂道3グループ対応の推し活ツール（登録なし・端末内保存・GitHub Pagesで動作）" />
-  <link rel="stylesheet" href="./styles.css?v=20260201_1">
+  <meta charset="UTF-8" />
+  <title>HumanTouch Lab - AI文章を人間らしく整えるツール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <header class="topbar">
-    <div class="topbar__inner">
+  <div class="app">
+    <header>
       <div class="brand">
-        <div class="brand__logo" aria-hidden="true">坂</div>
-        <div class="brand__texts">
-          <h1 class="brand__title">坂道ツール</h1>
-          <p class="brand__sub">登録なし / 端末内保存 / 外部ライブラリなし</p>
+        <div class="logo">H</div>
+        <div>
+          <h1>HumanTouch Lab</h1>
+          <p class="tagline">
+            AIが書いた文章を、「人間らしく・ちょうどよく」整えるためのローカルツール
+          </p>
         </div>
       </div>
+    </header>
 
-      <div class="topbar__actions">
-        <button id="themeBtn" class="btn btn--ghost" type="button" aria-label="ライト/ダーク切替">
-          <span class="btn__icon" aria-hidden="true">☾</span>
-          <span class="btn__text">Theme</span>
-        </button>
-      </div>
-    </div>
+    <main class="layout">
+      <!-- LEFT: input + controls -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            元の文章
+            <span class="badge">AIの出力をそのまま貼り付け</span>
+          </div>
+          <button id="clearInput" class="ghost small danger" type="button">
+            ✕ クリア
+          </button>
+        </div>
 
-    <div class="notice">
-      <div class="notice__inner">
-        <div class="notice__badge">安全</div>
-        <p class="notice__text">
-          <strong>本名・住所・学校名・連絡先・SNS ID</strong>など個人情報は入力しないでください。
-          入力内容は<strong>あなたの端末内（localStorage）</strong>に保存され、外部へ送信されません。
+        <textarea
+          id="inputText"
+          placeholder="例：AIが生成したメール文や説明文をここに貼り付けてください。"
+        ></textarea>
+        <div class="input-helper">
+          <span id="inputCount">0文字</span>
+          <span>ブラウザ内だけで処理され、サーバには送信されません。</span>
+        </div>
+
+        <div class="mode-tabs" id="modeTabs">
+          <button
+            class="mode-btn active"
+            data-mode="soften"
+            type="button"
+            title="強すぎる表現を和らげる"
+          >
+            <span class="icon">🪶</span>柔らかくする
+          </button>
+          <button
+            class="mode-btn"
+            data-mode="clarify"
+            type="button"
+            title="あいまいな表現をできるだけ明確にする"
+          >
+            <span class="icon">💡</span>はっきりさせる
+          </button>
+          <button
+            class="mode-btn"
+            data-mode="emotion"
+            type="button"
+            title="少しだけ感情・共感を足す"
+          >
+            <span class="icon">❤️</span>感情を添える
+          </button>
+          <button
+            class="mode-btn"
+            data-mode="polish"
+            type="button"
+            title="丁寧さ・読みやすさを調整"
+          >
+            <span class="icon">🧹</span>整えて読みやすく
+          </button>
+        </div>
+        <p id="modeDescription" class="mode-description">
+          「柔らかくする」は、強すぎる・断定的な表現をマイルドに言い換えます。
         </p>
-      </div>
-    </div>
 
-    <nav class="quicknav" aria-label="ページ内移動">
-      <a class="chipLink" href="#tools">ノート＆現場チェック</a>
-      <a class="chipLink" href="#colors">サイリウムカラー</a>
-      <a class="chipLink" href="#links">公式リンク</a>
-    </nav>
-  </header>
-
-  <main class="container">
-    <!-- ================= TOP: Tools (Notes + Checklist) ================= -->
-    <section id="tools" class="section">
-      <div class="section__head">
-        <div>
-          <h2 class="section__title">推し活ノート ＆ 現場チェック</h2>
-          <p class="section__desc">PCは左右に並びます。スマホは縦に並びます。保存は端末内だけ。</p>
+        <div class="actions">
+          <button id="applyMode" class="primary" type="button">
+            <span>変換する</span> ↻
+          </button>
+          <button id="swapTexts" class="secondary small" type="button">
+            入れ替え（結果→元に戻す）
+          </button>
+          <button id="restoreDraft" class="ghost small" type="button">
+            最後の下書きを復元
+          </button>
+          <button id="analyzeTone" class="ghost small" type="button">
+            トーンを解析
+          </button>
         </div>
-      </div>
 
-      <div class="layout2">
-        <!-- Notes -->
-        <section class="card">
-          <div class="card__head">
-            <h3 class="card__title">推し活ノート（端末内保存）</h3>
-            <div class="pill" id="notesCount">0件</div>
-          </div>
-
-          <div class="grid2">
-            <div class="field">
-              <label class="label" for="noteGroup">グループ</label>
-              <select id="noteGroup" class="select">
-                <option value="nogi">乃木坂46</option>
-                <option value="sakura">櫻坂46</option>
-                <option value="hinata">日向坂46</option>
-                <option value="common">共通</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label class="label" for="noteDate">日付</label>
-              <input id="noteDate" class="input" type="date" />
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="noteVenue">会場（任意）</label>
-            <input id="noteVenue" class="input" type="text" placeholder="例：東京ドーム / オンライン" maxlength="80" />
-          </div>
-
-          <div class="field">
-            <label class="label" for="noteType">種別</label>
-            <select id="noteType" class="select">
-              <option value="live">ライブ</option>
-              <option value="event">イベント</option>
-              <option value="meet">ミーグリ/握手</option>
-              <option value="stream">配信</option>
-              <option value="other">その他</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label class="label" for="noteText">メモ</label>
-            <textarea id="noteText" class="textarea" rows="7" placeholder="個人情報は書かない。例：導線/注意点/感想"></textarea>
-          </div>
-
-          <div class="field">
-            <label class="label" for="noteTags">タグ（スペース区切り）</label>
-            <input id="noteTags" class="input" type="text" placeholder="#物販 #座席 #注意点" />
-          </div>
-
-          <div class="row row--wrap">
-            <button id="saveNoteBtn" class="btn" type="button">保存</button>
-            <button id="clearNoteBtn" class="btn btn--ghost" type="button">入力クリア</button>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="grid2">
-            <div class="field">
-              <label class="label" for="notesSearch">検索</label>
-              <input id="notesSearch" class="input" type="search" placeholder="例：物販 / 座席 / #注意点" />
-            </div>
-            <div class="field">
-              <label class="label" for="notesFilterGroup">グループ</label>
-              <select id="notesFilterGroup" class="select">
-                <option value="all">すべて</option>
-                <option value="nogi">乃木坂46</option>
-                <option value="sakura">櫻坂46</option>
-                <option value="hinata">日向坂46</option>
-                <option value="common">共通</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="notesList" class="list"></div>
-
-          <div class="row row--wrap mt12">
-            <button id="exportNotesBtn" class="btn btn--ghost" type="button">JSONエクスポート</button>
-            <label class="btn btn--ghost fileBtn">
-              JSONインポート
-              <input id="importNotesInput" type="file" accept="application/json" hidden />
-            </label>
-            <button id="clearAllNotesBtn" class="btn btn--danger" type="button">全メモ削除</button>
-          </div>
-
-          <p class="small muted mt8">
-            ※他人から受け取ったJSONは読み込まないでください。
-          </p>
-        </section>
-
-        <!-- Checklist -->
-        <section class="card">
-          <div class="card__head">
-            <h3 class="card__title">現場チェック（端末内保存）</h3>
-            <div class="pill" id="checkProgress">0/0</div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="checkGroup">グループ</label>
-            <select id="checkGroup" class="select">
-              <option value="common">共通</option>
-              <option value="nogi">乃木坂46</option>
-              <option value="sakura">櫻坂46</option>
-              <option value="hinata">日向坂46</option>
-            </select>
-          </div>
-
-          <div class="row row--wrap">
-            <button id="resetChecklistBtn" class="btn btn--ghost" type="button">テンプレに戻す</button>
-            <button id="clearChecklistBtn" class="btn btn--danger" type="button">全部未チェック</button>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="field">
-            <label class="label" for="newItemText">項目追加</label>
-            <div class="row">
-              <input id="newItemText" class="input" type="text" placeholder="例：予備電池 / 雨具 / 身分証" maxlength="60" />
-              <button id="addItemBtn" class="btn" type="button">追加</button>
-            </div>
-            <p class="help">個人情報は入れない</p>
-          </div>
-
-          <div class="divider"></div>
-
-          <div id="checkList" class="checklist"></div>
-        </section>
-      </div>
-    </section>
-
-    <!-- ================= MIDDLE: Colors (default visible) ================= -->
-    <section id="colors" class="section">
-      <div class="section__head">
-        <div>
-          <h2 class="section__title">サイリウムカラー（メンバー別）</h2>
-          <p class="section__desc">絞り込み → 一覧 → お気に入り（★）で固定。デフォルトで表示されます。</p>
+        <div class="hint" id="writingHint">
+          <strong>ヒント：</strong> 主語と「誰のための文章か」を一度書き出してから整えると、
+          トーンを決めやすくなります。
         </div>
-      </div>
+      </section>
 
-      <div class="layout3">
-        <!-- left: filters -->
-        <aside class="card card--sticky">
-          <div class="card__head">
-            <h3 class="card__title">絞り込み</h3>
+      <!-- RIGHT: result + metrics -->
+      <section class="panel">
+        <div class="result-header">
+          <div class="panel-title">
+            整えた文章
+            <span class="badge">ここから自由に手動で修正してOK</span>
           </div>
-
-          <div class="field">
-            <label class="label" for="groupSelect">グループ</label>
-            <select id="groupSelect" class="select">
-              <option value="nogi">乃木坂46</option>
-              <option value="sakura">櫻坂46</option>
-              <option value="hinata">日向坂46</option>
-              <option value="all">全部（3グループ）</option>
-            </select>
+          <div class="actions">
+            <button id="copyOutput" class="secondary small" type="button">
+              コピー
+            </button>
+            <button id="downloadOutput" class="ghost small" type="button">
+              保存（.txt）
+            </button>
           </div>
-
-          <div class="field">
-            <label class="label" for="genSelect">期（任意）</label>
-            <select id="genSelect" class="select">
-              <option value="all">すべて</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label class="label" for="colorSearch">検索（名前/かな/愛称）</label>
-            <input id="colorSearch" class="input" type="search" placeholder="例：遠藤 / てん / こさかな" />
-            <p class="help">ひらがな・カタカナ・漢字OK</p>
-          </div>
-
-          <div class="row row--wrap">
-            <button id="resetFilterBtn" class="btn btn--ghost" type="button">リセット</button>
-            <button id="copyShareBtn" class="btn" type="button">条件URLコピー</button>
-          </div>
-
-          <div class="divider"></div>
-
-          <details class="details">
-            <summary>見方のコツ</summary>
-            <ul class="small muted">
-              <li>「全部」→ 検索でメンバーを一発</li>
-              <li>「期」→ 同期で探しやすい</li>
-              <li>お気に入り（★）→ よく使う推しを固定</li>
-            </ul>
-          </details>
-        </aside>
-
-        <!-- center: table -->
-        <section class="card card--wide" aria-label="一覧">
-          <div class="card__head">
-            <h3 class="card__title">一覧</h3>
-            <div class="pill" id="countPill">0件</div>
-          </div>
-
-          <div class="tableWrap" role="region" aria-label="サイリウムカラー一覧（横スクロール可）" tabindex="0">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th class="colFav">★</th>
-                  <th>グループ</th>
-                  <th>期</th>
-                  <th>名前</th>
-                  <th>メンバーカラー</th>
-                </tr>
-              </thead>
-              <tbody id="colorsTbody"></tbody>
-            </table>
-          </div>
-
-          <p class="small muted mt8">
-            ※色は環境で見え方が変わります。現場の公式ペンライトの色味を優先してください。
-          </p>
-        </section>
-
-        <!-- right: favorites -->
-        <aside class="card card--sticky">
-          <div class="card__head">
-            <h3 class="card__title">お気に入り（★）</h3>
-            <div class="pill" id="favPill">0人</div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="favGroup">表示グループ</label>
-            <select id="favGroup" class="select">
-              <option value="all">すべて</option>
-              <option value="nogi">乃木坂46</option>
-              <option value="sakura">櫻坂46</option>
-              <option value="hinata">日向坂46</option>
-            </select>
-          </div>
-
-          <div id="favList" class="favList"></div>
-
-          <div class="divider"></div>
-
-          <div class="row row--wrap">
-            <button id="clearFavBtn" class="btn btn--danger" type="button">お気に入り全解除</button>
-          </div>
-
-          <details class="details mt12">
-            <summary>安全メモ</summary>
-            <p class="small muted">
-              静的サイト。投稿機能なし。あなたの端末だけに保存されます。
-            </p>
-          </details>
-        </aside>
-      </div>
-    </section>
-
-    <!-- ================= BOTTOM: Links ================= -->
-    <section id="links" class="section section--bottom">
-      <div class="section__head">
-        <div>
-          <h2 class="section__title">公式リンク（安全属性つき）</h2>
-          <p class="section__desc">公式・注意喚起は「公式情報優先」。外部リンクはnoopener/noreferrer。</p>
         </div>
-      </div>
 
-      <div class="layout2">
-        <section class="card">
-          <div class="card__head"><h3 class="card__title">公式サイト</h3></div>
-          <ul class="linkList">
-            <li><a class="link" href="https://www.nogizaka46.com/" target="_blank" rel="noopener noreferrer">乃木坂46 公式</a></li>
-            <li><a class="link" href="https://sakurazaka46.com/" target="_blank" rel="noopener noreferrer">櫻坂46 公式</a></li>
-            <li><a class="link" href="https://www.hinatazaka46.com/" target="_blank" rel="noopener noreferrer">日向坂46 公式</a></li>
-          </ul>
+        <textarea
+          id="outputText"
+          class="textarea-small"
+          placeholder="結果がここに表示されます。モードを変えて何度も試してみてください。"
+        ></textarea>
 
-          <div class="divider"></div>
-
-          <div class="card__note">
-            <h4 class="card__noteTitle">違反しない応援の基本</h4>
-            <ul class="bullets">
-              <li>チケット・グッズは<strong>公式ルート</strong>を優先</li>
-              <li>画像/映像/音源の<strong>無断転載は禁止</strong>（転載しない）</li>
-              <li>転売・詐欺・怪しいDM勧誘に注意</li>
-            </ul>
+        <div class="meta">
+          <div class="pill">
+            📏 <span id="outputCount">0文字</span>
           </div>
-        </section>
-
-        <section class="card">
-          <div class="card__head"><h3 class="card__title">保存/削除</h3></div>
-          <p class="small muted">
-            データはこの端末のブラウザに保存されます。共有されません。
-          </p>
-
-          <div class="row row--wrap mt12">
-            <button id="wipeAllBtn" class="btn btn--danger" type="button">全データを初期化（localStorage）</button>
+          <div class="pill">
+            読みやすさ
+            <div class="score-bar">
+              <div id="readabilityBar" class="score-bar-inner"></div>
+            </div>
+            <span id="readabilityLabel" class="score-label">-</span>
           </div>
+          <div class="pill">
+            感情バランス
+            <div class="score-bar">
+              <div id="toneBar" class="score-bar-inner"></div>
+            </div>
+            <span id="toneLabel" class="score-label">-</span>
+          </div>
+        </div>
 
-          <details class="details mt12">
-            <summary>Q. オープン公開で安全？</summary>
-            <p class="small muted">
-              静的サイトなので、自動送信する仕組みはありません。個人情報を入力しないのが最も安全です。
-            </p>
-          </details>
-        </section>
-      </div>
-    </section>
-  </main>
+        <div class="hint" style="margin-top: 10px">
+          <strong>この結果は「たたき台」です。</strong><br />
+          最後の一手は、あなたの言葉で仕上げてください。  
+          不自然だと思うところは、遠慮なく書き換えてください。
+          <div class="chips" id="issueChips"></div>
+        </div>
+      </section>
+    </main>
 
-  <footer class="footer">
-    <p class="small muted">© 坂道ツール / 静的サイト（GitHub Pages） / 外部ライブラリなし</p>
-  </footer>
+    <footer class="footer">
+      <span>すべての処理はブラウザ内で完結します。データは送信されません。</span>
+      <span>
+        GitHub Pagesで動作するシンプルなプロトタイプ / 作者メモ：AIの苦手を人が補うための実験場
+      </span>
+    </footer>
+  </div>
 
-  <script src="./app.js?v=3"></script>
+  <div id="toast" class="toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastMsg">コピーしました</span>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
