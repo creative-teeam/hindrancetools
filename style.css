@@ -64,16 +64,26 @@ label {
 
 select,
 button,
-input[type="text"] {
+input[type="text"],
+textarea {
   margin-top: 0.4rem;
 }
 
 select,
-input[type="text"] {
+input[type="text"],
+textarea {
   padding: 0.4rem;
   border-radius: 4px;
   border: 1px solid #cbd2df;
   min-width: 260px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
 }
 
 button {
@@ -88,6 +98,15 @@ button {
 
 button:hover {
   background: #1d4ed8;
+}
+
+.sub-btn {
+  margin-top: 0.6rem;
+  background: #4b5563;
+}
+
+.sub-btn:hover {
+  background: #374151;
 }
 
 /* 情報ブロック */
@@ -153,6 +172,11 @@ footer {
 .example-text {
   font-style: italic;
   color: #2563eb;
+}
+
+/* カスタム incident 追記エリア */
+.custom-incident {
+  margin-top: 1rem;
 }
 
 /* スマホ対応 */
