@@ -14,10 +14,13 @@
   <main>
     <!-- 0. 想定外の障害・病気・特性の検索（診断名） -->
     <section class="card">
-      <h2>0. 想定外の障害・病気・特性の検索</h2>
+      <h2>0. 障害・病気・特性の検索（フリーワード）</h2>
       <p>
         ここに診断名・特性名を入力してください。<br />
-        例：<span class="example-text">「境界知能」「学習障害」「選択性緘黙」「発達性協調運動障害」「チック」など</span>
+        例：<span class="example-text">
+          自閉スペクトラム症、ADHD、学習障害、境界知能、選択性緘黙、
+          発達性協調運動障害、チック、起立性調節障害 など
+        </span>
       </p>
       <label for="globalFreeSearch">診断名・特性名：</label>
       <input
@@ -25,7 +28,7 @@
         id="globalFreeSearch"
         placeholder="例：自閉スペクトラム症、ADHD、学習障害、境界知能 など"
       />
-      <button id="globalFreeSearchBtn">対処法を表示</button>
+      <button id="globalFreeSearchBtn">対処の考え方を表示</button>
 
       <div id="globalFreeSearchResult" class="info-block hidden"></div>
     </section>
@@ -58,7 +61,10 @@
     <!-- 2. 親の付き添い必須ラインチェックリスト -->
     <section class="card">
       <h2>2. 親の付き添い必須ラインチェックリスト</h2>
-      <p>日常生活と学校生活の様子をもとに、付き添いが必要かどうかの目安を確認します。</p>
+      <p>
+        日常生活と学校生活の様子をもとに、付き添いが必要かどうかの目安を確認します。<br />
+        必要に応じて、下のボタンから項目を追加できます。
+      </p>
 
       <div class="checklist-container">
         <div class="checklist-block">
@@ -85,6 +91,7 @@
               発作やアレルギーなど、医療的な緊急対応が必要になる可能性がある
             </label>
           </form>
+          <button id="addDailyItemBtn" class="sub-btn">日常生活の項目を追加</button>
         </div>
 
         <div class="checklist-block">
@@ -111,6 +118,7 @@
               学校で医療的ケア（発作対応・エピペン・吸入など）の準備をしている
             </label>
           </form>
+          <button id="addSchoolItemBtn" class="sub-btn">学校生活の項目を追加</button>
         </div>
       </div>
 
@@ -121,7 +129,10 @@
     <!-- 3. その場の対応フロー -->
     <section class="card">
       <h2>3. その場の対応フロー</h2>
-      <p>トラブルや心配な行動が出たときに、状況に応じて流れを確認できます。</p>
+      <p>
+        トラブルや心配な行動が出たときに、状況に応じて流れを確認できます。<br />
+        必要に応じて、対応手順を自分でメモとして追加できます。
+      </p>
 
       <label for="incidentType">状況を選んでください：</label>
       <select id="incidentType">
@@ -141,11 +152,43 @@
       </select>
 
       <div id="incidentFlow" class="info-block hidden"></div>
+
+      <div class="custom-incident">
+        <label for="customIncidentText">
+          追記したい対応手順・注意点（自由記述）：
+        </label>
+        <textarea
+          id="customIncidentText"
+          rows="3"
+          placeholder="例：この子の場合は、パニック時に〇〇さんが声をかける／先に他の子を別室に移動させる など"
+        ></textarea>
+        <button id="addIncidentNoteBtn" class="sub-btn">
+          対応フローに追記
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. メモ欄 -->
+    <section class="card">
+      <h2>4. メモ欄（団体ごとのルール・気づきの記録）</h2>
+      <p>
+        稽古や本番で気づいたこと、保護者と話して決めたルールなどを自由にメモしてください。<br />
+        ※ブラウザを閉じると消えるので、必要に応じてコピーして他の場所に保存してください。
+      </p>
+      <label for="freeMemo">自由メモ：</label>
+      <textarea
+        id="freeMemo"
+        rows="6"
+        placeholder="例：〇月〇日 初参加。○○の場面でパニックになりかけたが、□□の声かけで落ち着いた。次回も同じ対応を試してみる。"
+      ></textarea>
     </section>
   </main>
 
   <footer>
-    <p>※このツールは現場スタッフの話し合いのたたき台として設計されています。実際の運用は必ず団体内で検討・調整してください。</p>
+    <p>
+      ※このツールは現場スタッフの話し合いのたたき台として設計されています。
+      実際の運用は必ず団体内で検討・調整してください。
+    </p>
   </footer>
 
   <script src="app.js"></script>
