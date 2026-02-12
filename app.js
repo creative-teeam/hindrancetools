@@ -21,7 +21,6 @@ const conditionData = {
       "女の子・男の子どちらも安心できるよう、必要であれば立ち位置やペアを見直す"
     ]
   },
-
   adhd: {
     name: "ADHD（注意欠如・多動症）",
     basicMeasures: [
@@ -38,7 +37,6 @@ const conditionData = {
       "危険な行動が続く場合は、保護者と相談し、参加時間を短くしたり付き添いを検討する"
     ]
   },
-
   intellectual: {
     name: "知的障害",
     basicMeasures: [
@@ -55,7 +53,6 @@ const conditionData = {
       "本人にとって分かりやすい形（イラスト・チェックリストなど）でルールを提示する"
     ]
   },
-
   epilepsy: {
     name: "てんかん",
     basicMeasures: [
@@ -72,7 +69,6 @@ const conditionData = {
       "1人のスタッフが付きっきりになる必要がある場合、保護者の付き添いを必須にすることも検討"
     ]
   },
-
   allergy: {
     name: "重度アレルギー（食物・薬・ハチなど）",
     basicMeasures: [
@@ -89,7 +85,6 @@ const conditionData = {
       "重度の場合は、必ず保護者か trained な大人が近くにいる体制をとる"
     ]
   },
-
   mental: {
     name: "不安障害・うつなどメンタル面の課題",
     basicMeasures: [
@@ -106,7 +101,6 @@ const conditionData = {
       "自傷のリスクがある場合は、専門職・保護者としっかり連携したうえで参加可否を判断する"
     ]
   },
-
   none: {
     name: "特に診断名はないが、配慮が必要そう",
     basicMeasures: [
@@ -123,14 +117,14 @@ const conditionData = {
   }
 };
 
-// HTML要素の取得（条件セクション）
+// ========== 1. 障害・病気セクション ==========
+
 const conditionSelect = document.getElementById("conditionSelect");
 const conditionInfo = document.getElementById("conditionInfo");
 const basicMeasuresDiv = document.getElementById("basicMeasures");
 const risksDiv = document.getElementById("risks");
 const specialMeasuresDiv = document.getElementById("specialMeasures");
 
-// 条件が選ばれたときの表示処理
 conditionSelect.addEventListener("change", () => {
   const value = conditionSelect.value;
   if (!value || !conditionData[value]) {
@@ -166,9 +160,8 @@ conditionSelect.addEventListener("change", () => {
   `;
 });
 
-// ===============================
-// 2. チェックリスト評価ロジック
-// ===============================
+// ========== 2. チェックリスト評価ロジック ==========
+
 const evaluateButton = document.getElementById("evaluateChecklist");
 const checklistResult = document.getElementById("checklistResult");
 
@@ -250,9 +243,8 @@ evaluateButton.addEventListener("click", () => {
   `;
 });
 
-// ===============================
-// 3. その場の対応フロー
-// ===============================
+// ========== 3. その場の対応フロー ==========
+
 const incidentTypeSelect = document.getElementById("incidentType");
 const incidentFlowDiv = document.getElementById("incidentFlow");
 
@@ -356,17 +348,12 @@ incidentTypeSelect.addEventListener("change", () => {
   incidentFlowDiv.innerHTML = html;
 });
 
-// ===============================
-// 4. 想定外の障害・事態用 フリーワード検索ロジック
-// ===============================
+// ========== 4. 想定外用キーワード判定 ==========
 
-// キーワードから「ざっくりカテゴリ」を推測する簡易関数
 function categorizeKeyword(keyword) {
   const k = keyword.toLowerCase();
-
   if (!k.trim()) return "empty";
 
-  // 身体的危険・暴力
   if (
     k.includes("叩") ||
     k.includes("殴") ||
@@ -381,7 +368,6 @@ function categorizeKeyword(keyword) {
     return "danger";
   }
 
-  // 距離感・性別・特定の子に固執
   if (
     k.includes("距離") ||
     k.includes("近づ") ||
@@ -394,7 +380,6 @@ function categorizeKeyword(keyword) {
     return "boundary";
   }
 
-  // 感覚過敏・音・光
   if (
     k.includes("音") ||
     k.includes("光") ||
@@ -406,12 +391,10 @@ function categorizeKeyword(keyword) {
     return "sensory";
   }
 
-  // 言葉が出ない・緘黙
   if (k.includes("話せ") || k.includes("喋れ") || k.includes("緘黙")) {
     return "communication";
   }
 
-  // 医療・発作・パニック
   if (
     k.includes("発作") ||
     k.includes("痙攣") ||
@@ -424,7 +407,6 @@ function categorizeKeyword(keyword) {
     return "medical";
   }
 
-  // パニック・癇癪・大声
   if (
     k.includes("パニック") ||
     k.includes("癇癪") ||
@@ -436,25 +418,23 @@ function categorizeKeyword(keyword) {
     return "emotional";
   }
 
-  // その他 → 一般的な「様子見＋保護者と連携」
   return "general";
 }
 
-// 共通のヒント生成
-function generateHintHtml(category, keyword, contextLabel) {
+// ========== 5. 検索欄ごとの「メッセージ生成」 ==========
+
+// 5-1. 全体検索用
+function generateGlobalHint(category, keyword) {
   if (category === "empty") {
     return `
-      <p>
-        キーワードが入力されていません。<br />
-        具体的な診断名・特性名・行動の様子などをできる範囲で入力してみてください。
-      </p>
+      <p>キーワードが入力されていません。診断名や特性名、行動の様子などを入力してみてください。</p>
     `;
   }
 
   let intro = `
     <p>
       入力されたキーワード：<strong>${keyword}</strong><br />
-      （${contextLabel} に関するヒントです）
+      （全体的な見立てと、まず押さえておきたいポイントです）
     </p>
   `;
 
@@ -463,78 +443,60 @@ function generateHintHtml(category, keyword, contextLabel) {
   switch (category) {
     case "danger":
       body = `
-        <div class="info-section-title">身体的な安全リスクが高い可能性があります</div>
         <ul>
-          <li>まずは「危険な行動そのもの」を止めることを最優先にします（安全確保）</li>
-          <li>その場で強く叱るだけでなく、落ち着いたあとに「何が危険か」を具体的に伝えます</li>
-          <li>同じ行動が2回以上続く場合は、親の付き添いを「原則必須」として検討してください</li>
+          <li>身体の安全に関わる可能性が高いので、「安全の確保」を最優先に考えます。</li>
+          <li>団体だけで無理に抱えず、保護者・学校・療育先と連携して対応方針を決めてください。</li>
+          <li>一時的に役割や参加時間を減らすことも選択肢に入れて構いません。</li>
         </ul>
       `;
       break;
-
     case "boundary":
       body = `
-        <div class="info-section-title">人との距離感・境界線（ボーダー）に関する課題かもしれません</div>
         <ul>
-          <li>「誰に対して」「どんな場面で」起きやすいかを観察し、パターンを把握します</li>
-          <li>パーソナルスペースを具体的に教える（床に印をつける、「腕1本分あける」など）工夫を試します</li>
-          <li>女の子・男の子など特定の性別に偏りがある場合、必ず保護者と情報共有し、付き添いの必要性を検討します</li>
+          <li>人との距離や関係性の課題が中心になっている可能性があります。</li>
+          <li>「悪気はないが相手が怖い」という状況になりやすいので、双方を守る視点が重要です。</li>
+          <li>パーソナルスペースを見える形で示す工夫（床テープなど）を、全体ルールとして導入するのも有効です。</li>
         </ul>
       `;
       break;
-
     case "sensory":
       body = `
-        <div class="info-section-title">感覚過敏・感覚の偏りが関係している可能性があります</div>
         <ul>
-          <li>どのような刺激（音・光・匂い・触覚）で強く反応するのかを保護者と共有します</li>
-          <li>必要に応じて、耳栓・ヘッドホン・照明調整・別室待機などの配慮を検討します</li>
-          <li>無理に慣れさせようとせず、少しずつ距離をとりながら参加できる形を探します</li>
+          <li>感覚（音・光・匂いなど）に強い苦手さがある場合、まず環境調整を検討してください。</li>
+          <li>「演劇」という特性上、音・光の刺激が大きくなりやすいので、段階的な参加も選択肢になります。</li>
         </ul>
       `;
       break;
-
     case "communication":
       body = `
-        <div class="info-section-title">ことばのやりとり・コミュニケーションのスタイルに特徴があるかもしれません</div>
         <ul>
-          <li>「話せない＝理解できない」ではないことを前提に、ゆっくり・はっきり・視覚的に伝えます</li>
-          <li>無理に話をさせるのではなく、うなずき・指差し・カードなど別の手段も試します</li>
-          <li>安心できる人・場所があるほど、少しずつ話せるようになることも多いです</li>
+          <li>話す・伝えることが難しい場合でも、理解力は保たれていることがあります。</li>
+          <li>カード・ジェスチャー・チェックシートなど、別の伝え方を一緒に探してください。</li>
         </ul>
       `;
       break;
-
     case "medical":
       body = `
-        <div class="info-section-title">医療的なリスクを伴う可能性があります</div>
         <ul>
-          <li>必ず保護者から「どんなときに」「どのくらいの頻度で」「どう対応するか」を具体的に聞いてください</li>
-          <li>発作やアレルギーなどが関係しそうな場合は、スタッフだけで抱え込まず、専門職・学校・主治医との連携も視野に入れます</li>
-          <li>リスクが高いと判断される場合は、親の常時付き添いを前提にした参加方法を検討してください</li>
+          <li>医療面のリスクが疑われる場合、保護者から必ず詳細を聞いてください。</li>
+          <li>緊急時の連絡体制・薬の有無・発作の頻度などを、紙にまとめておくと安心です。</li>
         </ul>
       `;
       break;
-
     case "emotional":
       body = `
-        <div class="info-section-title">感情の高ぶり・パニック・癇癪が関連しているかもしれません</div>
         <ul>
-          <li>「きっかけ（トリガー）」となった出来事や刺激が何かを一緒に振り返ります</li>
-          <li>落ち着けるスペースや時間をあらかじめ用意しておき、「困ったらそこに行っていい」と決めておきます</li>
-          <li>周囲の子どもたちには、必要以上にびっくりさせないよう、簡単な説明と安心できる声かけをします</li>
+          <li>感情の波が大きいタイプかもしれません。安心できる人・場所を事前に確保しておきます。</li>
+          <li>「怒らないでほしい」がベースにあることも多いので、叱責よりも環境調整・予告・クールダウンを重視します。</li>
         </ul>
       `;
       break;
-
     case "general":
     default:
       body = `
-        <div class="info-section-title">個別性が高い可能性があります</div>
         <ul>
-          <li>まずは保護者に「家ではどのように対応しているか」「過去にトラブルになったことがあるか」を詳しく聞きます</li>
-          <li>最初から完璧な対応を目指すより、「危険を減らしながら少しずつ慣れていく」方針を大切にします</li>
-          <li>スタッフだけで判断に迷う場合は、学校・療育先・専門職に相談することも検討してください</li>
+          <li>個別の事情が大きい可能性があるため、まずは保護者から丁寧に話を聞くことが重要です。</li>
+          <li>分からないまま決めつけず、「試してみて、振り返る」サイクルで対応を組み立ててください。</li>
         </ul>
       `;
       break;
@@ -543,7 +505,211 @@ function generateHintHtml(category, keyword, contextLabel) {
   return intro + body;
 }
 
-// 4-1. 全体用フリーワード検索
+// 5-2. 「この子に特有の特性」用
+function generateConditionHint(category, keyword) {
+  if (category === "empty") {
+    return `<p>この子に特有の行動や心配ごとを、できる範囲で言葉にして入力してみてください。</p>`;
+  }
+
+  let intro = `
+    <p>
+      入力された特性・行動：<strong>${keyword}</strong><br />
+      （個別の特性に合わせた見守りポイントです）
+    </p>
+  `;
+
+  let body = "";
+
+  switch (category) {
+    case "danger":
+      body = `
+        <ul>
+          <li>この行動が「いつ」「どこで」「誰に対して」起こりやすいか、パターンをメモしておきます。</li>
+          <li>パターンが見えてきたら、その時間帯・場面だけ大人を近くに配置するなど、ピンポイントで見守ります。</li>
+        </ul>
+      `;
+      break;
+    case "boundary":
+      body = `
+        <ul>
+          <li>特定の子に近づきすぎる場合、立ち位置やペアの組み方を変えることでリスクを下げられます。</li>
+          <li>「ここからは入らない線」「この距離ならOK」など、本人と一緒にルールを決めると効果的です。</li>
+        </ul>
+      `;
+      break;
+    case "sensory":
+      body = `
+        <ul>
+          <li>嫌がる刺激が出やすい場面（音出し、照明テストなど）を、あらかじめ短時間だけ試す機会を作ってもよいです。</li>
+          <li>しんどそうな時は、無理に続けさせず一時退室を選べるようにしておきます。</li>
+        </ul>
+      `;
+      break;
+    case "communication":
+      body = `
+        <ul>
+          <li>セリフのある演劇の場合、「声を出す役」「動きだけの役」を分けて考えてもよいかもしれません。</li>
+          <li>本人が安心して出せる声・タイミングを一緒に探していけると理想的です。</li>
+        </ul>
+      `;
+      break;
+    case "medical":
+      body = `
+        <ul>
+          <li>特性の裏に医療的な事情が隠れていることもあります。保護者に医師からの指示などがないか確認してください。</li>
+        </ul>
+      `;
+      break;
+    case "emotional":
+      body = `
+        <ul>
+          <li>感情が大きく動きやすい場合、「予告」と「選択肢」をセットで伝えると落ち着きやすくなります。</li>
+          <li>例：「あと5分で休憩終わり」「しんどかったらここで休んでもいい」など。</li>
+        </ul>
+      `;
+      break;
+    case "general":
+    default:
+      body = `
+        <ul>
+          <li>本人・保護者に「どうされると一番つらいか／どうされると安心か」を具体的に聞いてみてください。</li>
+        </ul>
+      `;
+      break;
+  }
+
+  return intro + body;
+}
+
+// 5-3. チェックリスト用
+function generateChecklistHint(category, keyword) {
+  if (category === "empty") {
+    return `<p>チェックリストでは拾えなかった「心配な行動」を、一言で構いませんので入力してみてください。</p>`;
+  }
+
+  let intro = `
+    <p>
+      入力された行動・状況：<strong>${keyword}</strong><br />
+      （付き添い判断を補うための視点です）
+    </p>
+  `;
+
+  let body = "";
+
+  switch (category) {
+    case "danger":
+      body = `
+        <ul>
+          <li>今のチェックリスト項目に加えて、<strong>付き添い「原則必須」より</strong>に考えてよいレベルです。</li>
+          <li>稽古場では再現したくない危険もあるので、家庭や学校での様子をさらに詳しく聞いて判断してください。</li>
+        </ul>
+      `;
+      break;
+    case "boundary":
+      body = `
+        <ul>
+          <li>物理的な危険と、心理的な安心の両方を守る必要があります。</li>
+          <li>今のチェックリスト評価に、<strong>「一部の時間だけ付き添い」</strong>などの条件付き参加も選択肢として加えてください。</li>
+        </ul>
+      `;
+      break;
+    case "sensory":
+      body = `
+        <ul>
+          <li>感覚過敏が強いと、「普段は大丈夫でも本番の大音量でパニック」なども起こり得ます。</li>
+          <li>初回〜数回は、保護者が近くにいると安心なケースも多いです。</li>
+        </ul>
+      `;
+      break;
+    case "medical":
+      body = `
+        <ul>
+          <li>チェックリストの「医療」に加えて、このキーワードも出ているため、付き添いを<strong>原則必須</strong>で検討してよい状況です。</li>
+          <li>団体として対応しきれない場合は、正直に伝え、別の形で関わる機会を一緒に考えることも大切です。</li>
+        </ul>
+      `;
+      break;
+    default:
+      body = `
+        <ul>
+          <li>判断に迷う場合は、「試しに1〜2回は付き添いあり」で運営してから、継続可否を話し合う方法もあります。</li>
+        </ul>
+      `;
+      break;
+  }
+
+  return intro + body;
+}
+
+// 5-4. 対応フロー用
+function generateIncidentHint(category, keyword) {
+  if (category === "empty") {
+    return `<p>具体的な場面（例：本番中に大声を出す など）を、短く入力してみてください。</p>`;
+  }
+
+  let intro = `
+    <p>
+      入力された場面：<strong>${keyword}</strong><br />
+      （その場の対応を考えるためのヒントです）
+    </p>
+  `;
+
+  let body = "";
+
+  switch (category) {
+    case "danger":
+      body = `
+        <ul>
+          <li>まずはどのカテゴリ（即時危険／ルール違反など）に近いかを、上のプルダウンで選び、フローと合わせて考えてください。</li>
+          <li>「危険が続くなら、その日は退場も含める」というラインをチーム内で共通認識にしておきます。</li>
+        </ul>
+      `;
+      break;
+    case "boundary":
+      body = `
+        <ul>
+          <li>距離感の問題で他の子が怖がっている場合、「psychological（心理的な不安）」のフローも参考になります。</li>
+          <li>場を分ける／立ち位置を変える／大人を間に入れる、という3つの基本を意識してください。</li>
+        </ul>
+      `;
+      break;
+    case "sensory":
+      body = `
+        <ul>
+          <li>音や光に反応しているなら、「本番前にテストして慣れる」「イヤーマフを許可する」なども検討可能です。</li>
+        </ul>
+      `;
+      break;
+    case "emotional":
+      body = `
+        <ul>
+          <li>感情の爆発は、その場で説得しても難しいことが多いため、まずはクールダウンの場へ案内します。</li>
+          <li>落ち着いた後に、「何が嫌だったか」「次はどうしてほしいか」を少しずつ聞くようにしてください。</li>
+        </ul>
+      `;
+      break;
+    case "medical":
+      body = `
+        <ul>
+          <li>医療的要因が疑われる場面では、救急要請のライン（意識・呼吸・時間）をあらかじめ決めておくと判断しやすくなります。</li>
+        </ul>
+      `;
+      break;
+    default:
+      body = `
+        <ul>
+          <li>その場で判断しきれない場合、「いったん安全を確保して止める」「後日、保護者と一緒に振り返る」の2段階で考えてください。</li>
+        </ul>
+      `;
+      break;
+  }
+
+  return intro + body;
+}
+
+// ========== 6. 各検索欄のイベント ==========
+
+// 6-1. 全体用
 const globalFreeSearchInput = document.getElementById("globalFreeSearch");
 const globalFreeSearchBtn = document.getElementById("globalFreeSearchBtn");
 const globalFreeSearchResult = document.getElementById("globalFreeSearchResult");
@@ -551,76 +717,46 @@ const globalFreeSearchResult = document.getElementById("globalFreeSearchResult")
 globalFreeSearchBtn.addEventListener("click", () => {
   const keyword = globalFreeSearchInput.value.trim();
   const category = categorizeKeyword(keyword);
-  const html = generateHintHtml(category, keyword || "（未入力）", "全体");
+  const html = generateGlobalHint(category, keyword || "（未入力）");
   globalFreeSearchResult.classList.remove("hidden");
   globalFreeSearchResult.innerHTML = html;
 });
 
-// 4-2. 条件セクション内フリーワード
-const conditionFreeSearchInput = document.getElementById(
-  "conditionFreeSearch"
-);
-const conditionFreeSearchBtn = document.getElementById(
-  "conditionFreeSearchBtn"
-);
-const conditionFreeSearchResult = document.getElementById(
-  "conditionFreeSearchResult"
-);
+// 6-2. 条件セクション用
+const conditionFreeSearchInput = document.getElementById("conditionFreeSearch");
+const conditionFreeSearchBtn = document.getElementById("conditionFreeSearchBtn");
+const conditionFreeSearchResult = document.getElementById("conditionFreeSearchResult");
 
 conditionFreeSearchBtn.addEventListener("click", () => {
   const keyword = conditionFreeSearchInput.value.trim();
   const category = categorizeKeyword(keyword);
-  const html = generateHintHtml(
-    category,
-    keyword || "（未入力）",
-    "この子に特有の特性・行動"
-  );
+  const html = generateConditionHint(category, keyword || "（未入力）");
   conditionFreeSearchResult.classList.remove("hidden");
   conditionFreeSearchResult.innerHTML = html;
 });
 
-// 4-3. チェックリスト用フリーワード
-const checklistFreeSearchInput = document.getElementById(
-  "checklistFreeSearch"
-);
-const checklistFreeSearchBtn = document.getElementById(
-  "checklistFreeSearchBtn"
-);
-const checklistFreeSearchResult = document.getElementById(
-  "checklistFreeSearchResult"
-);
+// 6-3. チェックリスト用
+const checklistFreeSearchInput = document.getElementById("checklistFreeSearch");
+const checklistFreeSearchBtn = document.getElementById("checklistFreeSearchBtn");
+const checklistFreeSearchResult = document.getElementById("checklistFreeSearchResult");
 
 checklistFreeSearchBtn.addEventListener("click", () => {
   const keyword = checklistFreeSearchInput.value.trim();
   const category = categorizeKeyword(keyword);
-  const html = generateHintHtml(
-    category,
-    keyword || "（未入力）",
-    "チェックリストでは拾いきれない行動・状況"
-  );
+  const html = generateChecklistHint(category, keyword || "（未入力）");
   checklistFreeSearchResult.classList.remove("hidden");
   checklistFreeSearchResult.innerHTML = html;
 });
 
-// 4-4. 対応フロー用フリーワード
-const incidentFreeSearchInput = document.getElementById(
-  "incidentFreeSearch"
-);
-const incidentFreeSearchBtn = document.getElementById(
-  "incidentFreeSearchBtn"
-);
-const incidentFreeSearchResult = document.getElementById(
-  "incidentFreeSearchResult"
-);
+// 6-4. 対応フロー用
+const incidentFreeSearchInput = document.getElementById("incidentFreeSearch");
+const incidentFreeSearchBtn = document.getElementById("incidentFreeSearchBtn");
+const incidentFreeSearchResult = document.getElementById("incidentFreeSearchResult");
 
 incidentFreeSearchBtn.addEventListener("click", () => {
   const keyword = incidentFreeSearchInput.value.trim();
   const category = categorizeKeyword(keyword);
-  const html = generateHintHtml(
-    category,
-    keyword || "（未入力）",
-    "具体的な場面での対応"
-  );
+  const html = generateIncidentHint(category, keyword || "（未入力）");
   incidentFreeSearchResult.classList.remove("hidden");
   incidentFreeSearchResult.innerHTML = html;
 });
