@@ -1,5 +1,5 @@
 // 保存用キー
-const STORAGE_KEY = "kids_support_tool_state_v1";
+const STORAGE_KEY = "kids_support_tool_state_v2";
 
 // ===============================
 // 0. 病名・障害・特性 一覧 管理
@@ -168,7 +168,6 @@ function addChecklistItem(formElement, groupName) {
     <input type="checkbox" name="${groupName}" value="${value}" />
     ${text}
   `;
-  // 追加項目識別用クラス
   label.classList.add("custom-check-item");
   formElement.appendChild(label);
 }
@@ -193,17 +192,17 @@ let resultTemplates = [
   {
     name: "付き添い原則必須（危険・医療リスクあり）",
     body:
-      "危険な行動や医療的なリスクが確認されています。\n原則として、保護者または支援者の付き添いを必須とし、団体として対応可能かどうかを慎重に検討してください."
+      "危険な行動や医療的なリスクが確認されています。\n原則として、保護者または支援者の付き添いを必須とし、団体として対応可能かどうかを慎重に検討してください。"
   },
   {
     name: "付き添い推奨（安全上の不安あり）",
     body:
-      "いくつかの場面で、1対1のサポートや見守りがあった方が安全・安心と考えられます。\n初期の数回だけでも、保護者の付き添いをお願いし、様子を一緒に確認することを検討してください."
+      "いくつかの場面で、1対1のサポートや見守りがあった方が安全・安心と考えられます。\n初期の数回だけでも、保護者の付き添いをお願いし、様子を一緒に確認することを検討してください。"
   },
   {
     name: "付き添い必須ではない（現時点）",
     body:
-      "現在の情報からは、常時の保護者付き添いがなくても対応できる可能性があります。\nただし、初めての場では予想外の反応が出ることもあるため、最初の数回は連絡がつきやすい状態にしてもらいましょう."
+      "現在の情報からは、常時の保護者付き添いがなくても対応できる可能性があります。\nただし、初めての場では予想外の反応が出ることもあるため、最初の数回は連絡がつきやすい状態にしてもらいましょう。"
   }
 ];
 
@@ -468,14 +467,49 @@ addCustomFlowBtn.addEventListener("click", () => {
 });
 
 // ===============================
-// 4. メモ欄 & 全体保存・復元
+// 4. メモ欄 + メモログ & 全体保存・復元
 // ===============================
 const freeMemoEl = document.getElementById("freeMemo");
+const memoLogListEl = document.getElementById("memoLogList");
 const saveAllBtn = document.getElementById("saveAllBtn");
+
+// メモログ：{ timestamp, text }
+let memoLogs = [];
+
+// メモログの描画
+function renderMemoLogs() {
+  memoLogListEl.innerHTML = "";
+  if (memoLogs.length === 0) {
+    memoLogListEl.innerHTML = "<p class=\"small-text\">まだメモログはありません。</p>";
+    return;
+  }
+
+  // 新しい順に表示
+  const logs = [...memoLogs].sort((a, b) => b.timestamp - a.timestamp);
+
+  logs.forEach((log) => {
+    const date = new Date(log.timestamp);
+    const dateStr = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${
+      String(date.getHours()).padStart(2, "0")
+    }:${String(date.getMinutes()).padStart(2, "0")}`;
+
+    const div = document.createElement("div");
+    div.className = "info-block";
+    div.style.marginTop = "0.6rem";
+    div.innerHTML = `
+      <div class="info-section-title">${dateStr} のメモ</div>
+      <p>${(log.text || "")
+        .replace(/\n/g, "<br />")
+        .replace(/ {2}/g, "&nbsp;&nbsp;")}</p>
+    `;
+    memoLogListEl.appendChild(div);
+  });
+}
 
 // 状態を1つのオブジェクトにまとめる
 function collectState() {
-  // チェックリスト追加項目（custom-check-item クラスが付与されているもの）
   const dailyCustomItems = Array.from(
     dailyChecklistForm.querySelectorAll("label.custom-check-item")
   ).map((label) => {
@@ -503,7 +537,8 @@ function collectState() {
     customFlows,
     dailyCustomItems,
     schoolCustomItems,
-    memo: freeMemoEl.value
+    memo: freeMemoEl.value,
+    memoLogs
   };
 }
 
@@ -511,25 +546,19 @@ function collectState() {
 function applyState(state) {
   if (!state) return;
 
-  if (Array.isArray(state.diagnoses)) {
-    diagnoses = state.diagnoses;
-  }
-  if (Array.isArray(state.responses)) {
-    responses = state.responses;
-  }
-  if (Array.isArray(state.resultTemplates)) {
+  if (Array.isArray(state.diagnoses)) diagnoses = state.diagnoses;
+  if (Array.isArray(state.responses)) responses = state.responses;
+  if (Array.isArray(state.resultTemplates))
     resultTemplates = state.resultTemplates;
-  }
-  if (Array.isArray(state.customFlows)) {
-    customFlows = state.customFlows;
-  }
+  if (Array.isArray(state.customFlows)) customFlows = state.customFlows;
+  if (Array.isArray(state.memoLogs)) memoLogs = state.memoLogs;
 
   // 画面再描画
   renderDiagnosisList();
   renderResponseList();
   renderTemplateSelect();
 
-  // カスタムフローをプルダウンに追加し直し
+  // カスタムフローをプルダウンに追加
   customFlows.forEach((f) => {
     const opt = document.createElement("option");
     opt.value = "custom:" + f.id;
@@ -565,13 +594,25 @@ function applyState(state) {
   if (typeof state.memo === "string") {
     freeMemoEl.value = state.memo;
   }
+
+  renderMemoLogs();
 }
 
 // 保存ボタン
 saveAllBtn.addEventListener("click", () => {
   try {
+    const text = freeMemoEl.value.trim();
+    if (text) {
+      memoLogs.push({
+        timestamp: Date.now(),
+        text
+      });
+    }
+
     const state = collectState();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    renderMemoLogs();
+
     saveAllBtn.textContent = "保存しました";
     setTimeout(() => {
       saveAllBtn.textContent = "保存する";
@@ -591,6 +632,7 @@ saveAllBtn.addEventListener("click", () => {
       renderDiagnosisList();
       renderResponseList();
       renderTemplateSelect();
+      renderMemoLogs();
       return;
     }
     const state = JSON.parse(saved);
@@ -600,5 +642,6 @@ saveAllBtn.addEventListener("click", () => {
     renderDiagnosisList();
     renderResponseList();
     renderTemplateSelect();
+    renderMemoLogs();
   }
 })();
