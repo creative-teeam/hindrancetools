@@ -1,3 +1,6 @@
+// 保存用キー
+const STORAGE_KEY = "kids_support_tool_state_v1";
+
 // ===============================
 // 0. 病名・障害・特性 一覧 管理
 // ===============================
@@ -10,6 +13,7 @@ const diagnosisDetail = document.getElementById("diagnosisDetail");
 const diagnosisDetailName = document.getElementById("diagnosisDetailName");
 const diagnosisDetailNotes = document.getElementById("diagnosisDetailNotes");
 
+// 初期データ（保存があれば後で上書きされる）
 let diagnoses = [
   {
     name: "自閉スペクトラム症（ASD）",
@@ -57,8 +61,6 @@ addDiagnosisBtn.addEventListener("click", () => {
   diagNameInput.value = "";
   diagNotesInput.value = "";
 });
-
-renderDiagnosisList();
 
 // ===============================
 // 1. 対応表・チェックリスト 一覧 管理
@@ -138,8 +140,6 @@ addResponseBtn.addEventListener("click", () => {
   respLevelSelect.value = "";
 });
 
-renderResponseList();
-
 // ===============================
 // 2. 親の付き添い必須ラインチェックリスト
 // ===============================
@@ -168,6 +168,8 @@ function addChecklistItem(formElement, groupName) {
     <input type="checkbox" name="${groupName}" value="${value}" />
     ${text}
   `;
+  // 追加項目識別用クラス
+  label.classList.add("custom-check-item");
   formElement.appendChild(label);
 }
 
@@ -191,17 +193,17 @@ let resultTemplates = [
   {
     name: "付き添い原則必須（危険・医療リスクあり）",
     body:
-      "危険な行動や医療的なリスクが確認されています。\n原則として、保護者または支援者の付き添いを必須とし、団体として対応可能かどうかを慎重に検討してください。"
+      "危険な行動や医療的なリスクが確認されています。\n原則として、保護者または支援者の付き添いを必須とし、団体として対応可能かどうかを慎重に検討してください."
   },
   {
     name: "付き添い推奨（安全上の不安あり）",
     body:
-      "いくつかの場面で、1対1のサポートや見守りがあった方が安全・安心と考えられます。\n初期の数回だけでも、保護者の付き添いをお願いし、様子を一緒に確認することを検討してください。"
+      "いくつかの場面で、1対1のサポートや見守りがあった方が安全・安心と考えられます。\n初期の数回だけでも、保護者の付き添いをお願いし、様子を一緒に確認することを検討してください."
   },
   {
     name: "付き添い必須ではない（現時点）",
     body:
-      "現在の情報からは、常時の保護者付き添いがなくても対応できる可能性があります。\nただし、初めての場では予想外の反応が出ることもあるため、最初の数回は連絡がつきやすい状態にしてもらいましょう。"
+      "現在の情報からは、常時の保護者付き添いがなくても対応できる可能性があります。\nただし、初めての場では予想外の反応が出ることもあるため、最初の数回は連絡がつきやすい状態にしてもらいましょう."
   }
 ];
 
@@ -254,8 +256,6 @@ applyTemplateBtn.addEventListener("click", () => {
     </div>
   `;
 });
-
-renderTemplateSelect();
 
 evaluateButton.addEventListener("click", () => {
   const dailyChecks = Array.from(
@@ -323,6 +323,8 @@ evaluateButton.addEventListener("click", () => {
   `;
 });
 
+renderTemplateSelect();
+
 // ===============================
 // 3. その場の対応フロー（既存＋カスタム）
 // ===============================
@@ -332,7 +334,6 @@ const customFlowNameInput = document.getElementById("customFlowName");
 const customFlowBodyInput = document.getElementById("customFlowBody");
 const addCustomFlowBtn = document.getElementById("addCustomFlowBtn");
 
-// 既存フローは固定、カスタムはここに追加
 let customFlows = []; // {id, name, body}
 
 function renderIncidentFlow() {
@@ -465,3 +466,139 @@ addCustomFlowBtn.addEventListener("click", () => {
   customFlowNameInput.value = "";
   customFlowBodyInput.value = "";
 });
+
+// ===============================
+// 4. メモ欄 & 全体保存・復元
+// ===============================
+const freeMemoEl = document.getElementById("freeMemo");
+const saveAllBtn = document.getElementById("saveAllBtn");
+
+// 状態を1つのオブジェクトにまとめる
+function collectState() {
+  // チェックリスト追加項目（custom-check-item クラスが付与されているもの）
+  const dailyCustomItems = Array.from(
+    dailyChecklistForm.querySelectorAll("label.custom-check-item")
+  ).map((label) => {
+    const input = label.querySelector("input[type='checkbox']");
+    return {
+      text: label.textContent.trim(),
+      value: input ? input.value : "support"
+    };
+  });
+
+  const schoolCustomItems = Array.from(
+    schoolChecklistForm.querySelectorAll("label.custom-check-item")
+  ).map((label) => {
+    const input = label.querySelector("input[type='checkbox']");
+    return {
+      text: label.textContent.trim(),
+      value: input ? input.value : "support"
+    };
+  });
+
+  return {
+    diagnoses,
+    responses,
+    resultTemplates,
+    customFlows,
+    dailyCustomItems,
+    schoolCustomItems,
+    memo: freeMemoEl.value
+  };
+}
+
+// 状態を画面に反映
+function applyState(state) {
+  if (!state) return;
+
+  if (Array.isArray(state.diagnoses)) {
+    diagnoses = state.diagnoses;
+  }
+  if (Array.isArray(state.responses)) {
+    responses = state.responses;
+  }
+  if (Array.isArray(state.resultTemplates)) {
+    resultTemplates = state.resultTemplates;
+  }
+  if (Array.isArray(state.customFlows)) {
+    customFlows = state.customFlows;
+  }
+
+  // 画面再描画
+  renderDiagnosisList();
+  renderResponseList();
+  renderTemplateSelect();
+
+  // カスタムフローをプルダウンに追加し直し
+  customFlows.forEach((f) => {
+    const opt = document.createElement("option");
+    opt.value = "custom:" + f.id;
+    opt.textContent = `【カスタム】${f.name}`;
+    incidentTypeSelect.appendChild(opt);
+  });
+
+  // カスタムチェック項目を復元
+  if (Array.isArray(state.dailyCustomItems)) {
+    state.dailyCustomItems.forEach((item) => {
+      const label = document.createElement("label");
+      label.classList.add("custom-check-item");
+      label.innerHTML = `
+        <input type="checkbox" name="daily" value="${item.value}" />
+        ${item.text}
+      `;
+      dailyChecklistForm.appendChild(label);
+    });
+  }
+
+  if (Array.isArray(state.schoolCustomItems)) {
+    state.schoolCustomItems.forEach((item) => {
+      const label = document.createElement("label");
+      label.classList.add("custom-check-item");
+      label.innerHTML = `
+        <input type="checkbox" name="school" value="${item.value}" />
+        ${item.text}
+      `;
+      schoolChecklistForm.appendChild(label);
+    });
+  }
+
+  if (typeof state.memo === "string") {
+    freeMemoEl.value = state.memo;
+  }
+}
+
+// 保存ボタン
+saveAllBtn.addEventListener("click", () => {
+  try {
+    const state = collectState();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    saveAllBtn.textContent = "保存しました";
+    setTimeout(() => {
+      saveAllBtn.textContent = "保存する";
+    }, 1500);
+  } catch (e) {
+    alert("保存に失敗しました（ブラウザの制限の可能性があります）");
+    console.error(e);
+  }
+});
+
+// ページ読み込み時に復元
+(function restoreAll() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      // 初期描画
+      renderDiagnosisList();
+      renderResponseList();
+      renderTemplateSelect();
+      return;
+    }
+    const state = JSON.parse(saved);
+    applyState(state);
+  } catch (e) {
+    console.warn("保存データの復元に失敗しました:", e);
+    renderDiagnosisList();
+    renderResponseList();
+    renderTemplateSelect();
+  }
+})();
